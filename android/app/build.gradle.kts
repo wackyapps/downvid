@@ -7,18 +7,24 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-
 android {
-    namespace = "com.downvid.app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    namespace = "com.socialdownload.videodownload.app"
+    compileSdk = 36
+    ndkVersion = "27.3.13750724"
+
+
+
+    packaging {
+            jniLibs {
+                useLegacyPackaging = false   // This is the key line for 16KB support
+            }
+        }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -26,17 +32,14 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "11"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.downvid.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.socialdownload.videodownload.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = 19
         versionName = flutter.versionName
     }
 
@@ -51,8 +54,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -65,3 +66,4 @@ flutter {
 dependencies {
     implementation("com.google.android.gms:play-services-ads:23.3.0")
 }
+

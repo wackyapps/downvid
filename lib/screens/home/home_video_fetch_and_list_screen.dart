@@ -1,9 +1,8 @@
 import 'package:downvid/core/utils/helper.dart';
 import 'package:downvid/services/admob/native_ad_widget.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:listen_sharing_intent/listen_sharing_intent.dart';
 import 'package:downvid/providers/home_download_provider/home_download_provider.dart';
 import 'package:downvid/screens/home/video_download_meta_bottom_sheet.dart';
-import 'package:downvid/services/event_bus_service/event_bus_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
@@ -82,40 +81,43 @@ class _HomeVideoFetchAndListScreenState
     });
   }
 
-  Future<void> _handleSharedUrl(String sharedText) async {
-    if (SocialUrlUtilities.isValidVideoUrl(sharedText)) {
-      final parsedUrl = SocialUrlUtilities.getFacebookUrl(sharedText);
-      _homeAndDownloadProvider.url = parsedUrl;
-      _controller.text = sharedText;
+Future<void> _handleSharedUrl(String sharedText) async {
+  // ← YEHI LINE ADD KAR DO — extra spaces aur empty parts hata do
+  final cleanText = sharedText.trim().replaceAll(RegExp(r'\s+'), ' ');
 
-      _showLoadingDialog(context);
-
-      try {
-        final videoModel = await _homeAndDownloadProvider.fetchVideoMetaData(
-          context: context,
-          url: parsedUrl,
-        );
-
-        _dismissLoadingDialog();
-
-        if (videoModel != null) {
-          bottomVideoMetaBottomSheet(
-            // ignore: use_build_context_synchronously
-            context: context,
-            sheetHeight: 80.0.h,
-            userUrl: sharedText.trim(),
-          );
-        } else {
-          Fluttertoast.showToast(msg: 'Failed to fetch video metadata');
-        }
-      } catch (e) {
-        _dismissLoadingDialog();
-        Fluttertoast.showToast(msg: 'Error: $e');
-      }
-    } else {
-      Fluttertoast.showToast(msg: 'Invalid video URL');
-    }
+  if (!SocialUrlUtilities.isValidVideoUrl(cleanText)) {
+    debugPrint("Invalid URL received via share: $cleanText");
+    return;
   }
+
+  final parsedUrl = SocialUrlUtilities.getFacebookUrl(cleanText);
+  _homeAndDownloadProvider.url = parsedUrl;
+  _controller.text = cleanText;
+
+  _showLoadingDialog(context);
+
+  try {
+    final videoModel = await _homeAndDownloadProvider.fetchVideoMetaData(
+      context: context,
+      url: parsedUrl,
+    );
+
+    _dismissLoadingDialog();
+
+    if (videoModel != null && videoModel.videoLinks.isNotEmpty) {
+      bottomVideoMetaBottomSheet(
+        context: context,
+        sheetHeight: 70.0.h,
+        userUrl: cleanText,
+      );
+    } else {
+      Fluttertoast.showToast(msg: 'No downloadable video found');
+    }
+  } catch (e) {
+    _dismissLoadingDialog();
+    Fluttertoast.showToast(msg: 'Error: $e');
+  }
+}
 
   /// ✅ Automatically checks clipboard and pastes Facebook URLs
   Future<void> _checkClipboardForFacebookUrl() async {
