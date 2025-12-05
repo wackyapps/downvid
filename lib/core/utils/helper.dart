@@ -8,21 +8,36 @@ class SocialUrlUtilities {
   }
 
 static String getFacebookUrl(String sampleUrl) {
-  final cleanUrl = sampleUrl.trim();
-  final parts = cleanUrl.split('/').where((part) => part.isNotEmpty).toList();
+  // Sabse pehle RTL characters hata do
+  String clean = sampleUrl
+      .replaceAll(RegExp(r'[\u200E\u200F\u202A-\u202E\u2028\r]'), '')
+      .trim();
 
-  if (parts.contains('share') && parts.contains('r')) {
-    final index = parts.indexOf('r') + 1;
-    if (index < parts.length) {
-      return 'https://www.facebook.com/reel/${parts[index]}';
-    }
-  } else if (parts.contains('share') && parts.contains('v')) {
-    final index = parts.indexOf('v') + 1;
-    if (index < parts.length) {
-      return 'https://www.facebook.com/watch/?v=${parts[index].split('?').first}';
+  final uri = Uri.tryParse(clean);
+  if (uri == null) return clean;
+
+  final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+
+  // Reel format: /share/r/ID or /reel/ID
+  if (segments.contains('r') || segments.contains('reel')) {
+    final index = segments.indexWhere((s) => s == 'r' || s == 'reel') + 1;
+    if (index < segments.length) {
+      return 'https://www.facebook.com/reel/${segments[index]}';
     }
   }
-  return cleanUrl;
+
+  // Watch format: /share/v/ID or /watch/?v=ID
+  if (segments.contains('v') || uri.queryParameters.containsKey('v')) {
+    final videoId = segments.contains('v') 
+        ? segments[segments.indexOf('v') + 1]
+        : uri.queryParameters['v'];
+    if (videoId != null) {
+      return 'https://www.facebook.com/watch/?v=$videoId';
+    }
+  }
+
+  // Fallback: m.facebook.com bana do (fdown.net better accept karta hai)
+  return clean.replaceFirst('www.facebook.com', 'm.facebook.com');
 }
 
 

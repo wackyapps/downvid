@@ -1,5 +1,6 @@
 // lib/services/fdown_service/fbdown_service.dart
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io' show Directory, File;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -143,6 +144,8 @@ class FbDownService {
   }
 
   Future<void> _fillAndSubmit(String url) async {
+    // debugger();
+
     final js = '''
       (function(){
         const inp = document.querySelector('input[name="URLz"]');
@@ -159,7 +162,13 @@ class FbDownService {
 
   Future<String> _waitForResultPage({int maxAttempts = 40}) async {
     for (int i = 0; i < maxAttempts; i++) {
+
+
+      // check during debug
       final url = (await _controller!.currentUrl()) ?? '';
+
+
+
       if (url.contains('download.php') || url.contains('error=')) {
         return url;
       }
@@ -169,6 +178,8 @@ class FbDownService {
   }
 
 Future<VideoMetaDataModel?> _scrapeDownloadPage() async {
+  // debugger();
+
   try {
     final raw = await _controller!.runJavaScriptReturningResult('''
       (function(){
@@ -266,11 +277,11 @@ Future<void> downloadVideo({
     final fileName = '${safeTitle}_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
     // REQUEST ALL FILES ACCESS (this is the ONLY thing that works on Android 13+)
-    if (await Permission.manageExternalStorage.isDenied) {
-      final status = await Permission.manageExternalStorage.request();
+    if (await Permission.videos.isDenied) {
+      final status = await Permission.videos.request();
       if (!status.isGranted) {
         Fluttertoast.showToast(
-          msg: "All Files Access required for Android 13+",
+          msg: "Media Storage permission required",
           backgroundColor: Colors.red.shade700,
         );
         onError("Permission denied");
