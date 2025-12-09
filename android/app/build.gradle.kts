@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.socialdownload.videodownload.app"
+    namespace = "com.fbreels.downloader"
     compileSdk = 36
     ndkVersion = "27.3.13750724"
 
@@ -36,10 +36,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.socialdownload.videodownload.app"
+        applicationId = "com.fbreels.downloader"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 19
+        versionCode = 22
         versionName = flutter.versionName
     }
 

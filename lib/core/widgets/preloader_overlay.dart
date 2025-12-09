@@ -10,6 +10,7 @@ class PreloaderOverlayWidget extends StatelessWidget {
     return Stack(
       children: [
         Container(
+            // ignore: deprecated_member_use
             height: 100.h, width: 100.w, color: Colors.black.withOpacity(0.5)),
         Center(
             child: Container(
@@ -21,6 +22,7 @@ class PreloaderOverlayWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
+                          // ignore: deprecated_member_use
                           color: Colors.grey.withOpacity(0.5),
                           spreadRadius: 5,
                           blurRadius: 7,

@@ -1,5 +1,4 @@
 import 'package:downvid/models/video_meta_model/video_model.dart';
-import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/providers/home_download_provider/home_download_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,11 +29,9 @@ Future<void> bottomVideoMetaBottomSheet({
             child: Consumer<HomeAndDownloadProvider>(
               builder: (context, provider, _) {
                 final meta = provider.videoMetaDataModel;
-
                 if (meta == null || meta.hasScrappingError == true) {
                   return _buildErrorState(sheetContext, sheetHeight);
                 }
-
                 return _buildDownloadOptions(
                   sheetContext: sheetContext,
                   provider: provider,
@@ -82,7 +79,7 @@ Widget _buildErrorState(BuildContext context, double sheetHeight) {
   );
 }
 
-// ───────────────────────────────────────────── Main UI + HD-ONLY AD
+// ───────────────────────────────────────────── Main UI + FULL SCREEN PROGRESS
 Widget _buildDownloadOptions({
   required BuildContext sheetContext,
   required HomeAndDownloadProvider provider,
@@ -97,7 +94,7 @@ Widget _buildDownloadOptions({
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header, Thumbnail, Title → same as before
+        // Header + Close
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -107,6 +104,7 @@ Widget _buildDownloadOptions({
         ),
         SizedBox(height: 2.h),
 
+        // Thumbnail + Title
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -141,18 +139,15 @@ Widget _buildDownloadOptions({
         ),
         SizedBox(height: 3.h),
 
+        // Resolutions
         Text("Resolutions", style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.grey[800])),
         SizedBox(height: 1.h),
-
-        // SD / HD Chips → unchanged
         ...meta.videoLinks.asMap().entries.map((entry) {
           final index = entry.key;
           final link = entry.value;
-
           if (!link.quality.toLowerCase().contains('hd') && !link.quality.toLowerCase().contains('sd')) {
             return const SizedBox.shrink();
           }
-
           return Container(
             margin: EdgeInsets.symmetric(vertical: 0.8.h),
             decoration: BoxDecoration(
@@ -180,65 +175,84 @@ Widget _buildDownloadOptions({
 
         const Spacer(),
 
-        // Progress or Download Button
-        // Progress or Download Button
-if (provider.downloadProgress > 0 && provider.downloadProgress < 1)
-  Column(
-    children: [
-      LinearProgressIndicator(
-        value: provider.downloadProgress,
-        backgroundColor: Colors.grey[300],
-        color: Colors.blueAccent,
-        minHeight: 6,
-      ),
-      SizedBox(height: 1.h),
-      Text(
-        "${(provider.downloadProgress * 100).toStringAsFixed(1)}%",
-        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
-      ),
-    ],
-  )
-else
-  SizedBox(
-    width: double.infinity,
-    child: ElevatedButton.icon(
-      onPressed: () async {
-        await provider.downloadVideo(
-          userUrl: userUrl,
-          selectedLinkIndex: provider.selectedLinkIndex,
-          context: sheetContext,
-        );
-
-        if (!sheetContext.mounted) return;
-        Navigator.pop(sheetContext);
-
-        await Future.delayed(const Duration(milliseconds: 800));
-        if (!sheetContext.mounted) return;
-
-        // SHOW AD ON BOTH HD AND SD DOWNLOADS
-        final adProvider = Provider.of<AdProvider>(sheetContext, listen: false);
-
-        if (adProvider.isInterstitialAvailable && adProvider.loadedInterstitialAd) {
-          debugPrint('DOWNLOAD SUCCESS → SHOWING INTERSTITIAL AD (HD or SD)');
-
-          adProvider.showInterstitialAd(
-            onAdShowedFullScreen: (_) {},
-            onAdDismissedFullScreen: (_) {},
-            onAdFailedToShowFullScreen: (_, error) => debugPrint('Ad failed: $error'),
-          );
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueAccent,
-        padding: EdgeInsets.symmetric(vertical: 1.8.h),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      icon: const Icon(Icons.download_rounded, color: Colors.white),
-      label: Text("Download",
-          style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-    ),
-  ),
+        // ONLY DOWNLOAD BUTTON — NO PROGRESS BAR HERE
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: provider.isDownloading
+                ? null // Disable if already downloading
+                : () async {
+                    Navigator.pop(sheetContext); // Close bottom sheet
+                    _showDownloadProgressDialog(sheetContext); // Show full-screen progress
+                    await provider.downloadVideo(
+                      userUrl: userUrl,
+                      selectedLinkIndex: provider.selectedLinkIndex,
+                      context: sheetContext,
+                    );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: provider.isDownloading ? Colors.grey : Colors.blueAccent,
+              padding: EdgeInsets.symmetric(vertical: 1.8.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.download_rounded, color: Colors.white),
+            label: Text(
+              provider.isDownloading ? "Downloading..." : "Download",
+              style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
       ],
+    ),
+  );
+}
+
+// ───────────────────────────────────────────── FULL SCREEN PROGRESS DIALOG
+void _showDownloadProgressDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => WillPopScope(
+      onWillPop: () async => false,
+      child: Consumer<HomeAndDownloadProvider>(
+        builder: (context, provider, _) {
+          // Auto close when download completes
+          if (provider.downloadProgress >= 1.0) {
+            Future.delayed(const Duration(milliseconds: 800), () {
+              if (Navigator.canPop(context)) Navigator.pop(context);
+            });
+          }
+
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(strokeWidth: 5, color: Colors.blueAccent),
+                SizedBox(height: 2.h),
+                Text("Downloading Video...", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                SizedBox(height: 2.h),
+                LinearProgressIndicator(
+                  value: provider.downloadProgress > 0 && provider.downloadProgress < 1
+                      ? provider.downloadProgress
+                      : null,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  provider.downloadProgress >= 1
+                      ? "Download Complete!"
+                      : "${(provider.downloadProgress * 100).toStringAsFixed(1)}%",
+                  style: TextStyle(fontSize: 14.sp),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     ),
   );
 }

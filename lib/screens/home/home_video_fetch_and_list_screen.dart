@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:downvid/core/utils/helper.dart';
 import 'package:downvid/services/admob/native_ad_widget.dart';
 import 'package:listen_sharing_intent/listen_sharing_intent.dart';
@@ -228,7 +226,7 @@ class _HomeVideoFetchAndListScreenState
   // 🌀 Simple reusable loader dialog
   void _showLoadingDialog(
     BuildContext context, {
-    String message = "Fetching video data. Please wait...",
+    String message = "Fetching video data.\nPlease wait...",
   }) {
     showDialog(
       context: context,
