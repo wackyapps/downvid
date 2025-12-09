@@ -412,11 +412,11 @@ class _HomeVideoFetchAndListScreenState
               ],
             ),
 
-            SizedBox(height: 4.h), // Space before ad
+            // SizedBox(height: 4.h), // Space before ad
             // BANNER AD HERE — PERFECT POSITION
-            const Center(child: NativeAdWidget()),
+            // const Center(child: NativeAdWidget()),
 
-            // SizedBox(height: 14.h),
+            SizedBox(height: 38.h),
 
             // "How to Download" Section
             const Divider(height: 12, endIndent: 50.0, indent: 50.0),
@@ -430,7 +430,7 @@ class _HomeVideoFetchAndListScreenState
             ),
             SizedBox(height: 1.h),
 
-            _buildStep(1, "Open Social media and Copy link video"),
+            _buildStep(1, "Open Facebook and Copy link video"),
             _buildStep(
               2,
               "Open “DownVid” and Press Paste to Paste the link of the video",
