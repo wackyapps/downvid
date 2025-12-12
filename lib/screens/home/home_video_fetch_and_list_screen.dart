@@ -412,11 +412,11 @@ class _HomeVideoFetchAndListScreenState
               ],
             ),
 
-            // SizedBox(height: 4.h), // Space before ad
+            SizedBox(height: 4.h), // Space before ad
             // BANNER AD HERE — PERFECT POSITION
-            // const Center(child: NativeAdWidget()),
+            const Center(child: NativeAdWidget()),
 
-            SizedBox(height: 38.h),
+            // SizedBox(height: 38.h),
 
             // "How to Download" Section
             const Divider(height: 12, endIndent: 50.0, indent: 50.0),

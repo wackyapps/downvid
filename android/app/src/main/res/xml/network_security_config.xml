@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">fdown.net</domain>
+        <domain includeSubdomains="true">fbcdn.net</domain>
+        <domain includeSubdomains="true">facebook.com</domain>
+        <domain includeSubdomains="true">cdninstagram.com</domain>
+    </domain-config>
+    
+    <!-- Baaki sab domains HTTPS only -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

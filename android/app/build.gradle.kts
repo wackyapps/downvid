@@ -39,7 +39,7 @@ android {
         applicationId = "com.fbreels.downloader"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 1
+        versionCode = 3
         versionName = flutter.versionName
     }
 
@@ -55,6 +55,9 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+
+            isShrinkResources = false
+            isMinifyEnabled = false
         }
     }
 }
