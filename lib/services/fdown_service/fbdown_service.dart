@@ -261,11 +261,14 @@ Future<void> downloadVideo({
   required Function(String) onError,
 }) async {
   final dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 20),
-    receiveTimeout: const Duration(minutes: 10),
-    sendTimeout: const Duration(seconds: 20),
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(minutes: 30),
+    sendTimeout: const Duration(seconds: 30),
     followRedirects: true,
-    maxRedirects: 5,
+    maxRedirects: 10,
+    persistentConnection: true,
+    receiveDataWhenStatusError: true,
+  
   ));
 
   try {
@@ -297,16 +300,37 @@ Future<void> downloadVideo({
     debugPrint("Downloading to: $filePath");
 
     // Direct download
+DateTime? lastUpdateTime;
+    double lastReportedProgress = 0.0;
+
     await dio.download(
       link.link,
       filePath,
       onReceiveProgress: (received, total) {
-        if (total > 0) onProgress(received / total);
+        if (total <= 0) return;
+
+        final double progress = received / total;
+        final DateTime now = DateTime.now();
+
+        // Update only if:
+        // - At least 1% progress changed OR
+        // - 500ms passed since last update
+        final bool progressChangedEnough = (progress - lastReportedProgress).abs() >= 0.01;
+        final bool timePassed = lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds >= 500;
+
+        if (progressChangedEnough || timePassed) {
+          onProgress(progress);
+          lastReportedProgress = progress;
+          lastUpdateTime = now;
+        }
       },
       options: Options(
         headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro Build/AP2A.241205.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.6738.108 Mobile Safari/537.36',
+          'Referer': 'https://fdown.net/',
+          'Origin': 'https://fdown.net',
+          'Accept': '*/*',
+          'Connection': 'keep-alive',
         },
       ),
     );
