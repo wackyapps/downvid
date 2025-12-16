@@ -1,3 +1,4 @@
+import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/screens/animated_bottom_nav_page/bottom_nav.dart';
 import 'package:downvid/screens/appbar/appbar.dart';
 import 'package:downvid/screens/downloaded/downloaded_list_screen.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:downvid/screens/home/home_video_fetch_and_list_screen.dart';
 import 'package:get_it/get_it.dart';
 import 'package:downvid/services/fdown_service/fbdown_service.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,10 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> _titles = ["Home", "Downloads"];
 
-  @override
+ @override
   void initState() {
     super.initState();
     fbDownService.initWebView();
+
+    // Ads load — first frame ke baad
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final adProvider = Provider.of<AdProvider>(context, listen: false);
+      adProvider.loadAdsOnFirstUse(); // New method
+    });
   }
 
   @override

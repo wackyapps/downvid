@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/providers/downloaded_video_list_provider/downloaded_video_list_provider.dart';
 import 'package:downvid/providers/home_download_provider/home_download_provider.dart';
@@ -8,14 +9,14 @@ import 'package:downvid/screens/home/home_screen.dart';
 import 'package:downvid/screens/home/remove_ads/remove_ads_screen.dart';
 import 'package:downvid/screens/setttings/languages_list_screen.dart';
 import 'package:downvid/service_locator.dart';
+import 'package:downvid/services/fdown_service/fbdown_service.dart';
+import 'package:downvid/services/object_box/object_box_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,42 +54,45 @@ void main() async {
   });
 }
 
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context); // Listen to changes
+    final themeProvider = Provider.of<ThemeProvider>(
+      context,
+    ); // Listen to changes
 
-    return Sizer(builder: (context, orientation, deviceType) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'DownVid',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        darkTheme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: Colors.black,
-          colorScheme: const ColorScheme.dark().copyWith(
-            primary: Colors.blueAccent,
-            secondary: Colors.blueAccent,
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'DownVid',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            brightness: Brightness.light,
           ),
-        ),
-        themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light, // ⚡ Important
-        initialRoute: "/home",
-        routes: {
-          '/home': (context) => const HomeScreen(),
-          // '/settings': (context) => const SettingsListScreen(),
-          '/downloaded': (context) => const DownloadedListScreen(),
-          // '/how_to': (context) => const HowToSliderScree(),
-          '/remove_ads': (context) => const RemoveAdsScreen(),
-          '/languages': (context) => const LanguagesListScreen(),
-        },
-      );
-    });
+          darkTheme: ThemeData.dark().copyWith(
+            scaffoldBackgroundColor: Colors.black,
+            colorScheme: const ColorScheme.dark().copyWith(
+              primary: Colors.blueAccent,
+              secondary: Colors.blueAccent,
+            ),
+          ),
+          themeMode: themeProvider.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light, // ⚡ Important
+          initialRoute: "/home",
+          routes: {
+            '/home': (context) => const HomeScreen(),
+            // '/settings': (context) => const SettingsListScreen(),
+            '/downloaded': (context) => const DownloadedListScreen(),
+            // '/how_to': (context) => const HowToSliderScree(),
+            '/remove_ads': (context) => const RemoveAdsScreen(),
+            '/languages': (context) => const LanguagesListScreen(),
+          },
+        );
+      },
+    );
   }
 }
-

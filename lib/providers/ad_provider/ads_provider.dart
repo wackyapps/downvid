@@ -44,26 +44,54 @@ class AdProvider extends ChangeNotifier {
 
   int _counter = 0;
 
-AdProvider() {
-  debugPrint('AdProvider: Initializing...');
-  _createInterstitialAd();
-  _createRewardedAd();
-  
-  // Pehla interstitial ad turant available banao
-  // Taaki app open karte hi ads dikh sake
-  Future.delayed(Duration.zero, () {
-    isInterstitialAvailable = true;
-    debugPrint('FIRST INTERSTITIAL AD FORCE AVAILABLE FOR TESTING/EARLY SHOW');
-  });
-}
+  NativeAd? _nativeAd;
+  bool _nativeAdIsLoaded = false;
+  bool get nativeAdIsLoaded => _nativeAdIsLoaded;
 
-  String get rewardedAdUnitId => Platform.isAndroid
-      ? AdManager.rewardIdAndroid
-      : AdManager.rewardIdiOS;
+  AdProvider() {
+    debugPrint('AdProvider: Initializing...');
+    // _createInterstitialAd();
+    // _createRewardedAd();
+
+    // Pehla interstitial ad turant available banao
+    // Taaki app open karte hi ads dikh sake
+    Future.delayed(Duration.zero, () {
+      isInterstitialAvailable = true;
+      debugPrint(
+        'FIRST INTERSTITIAL AD FORCE AVAILABLE FOR TESTING/EARLY SHOW',
+      );
+    });
+  }
+
+ void loadAdsOnFirstUse() {
+    // Load only ONE ad type initially, stagger the rest
+    if (!_loadedInterstitialAd) {
+      _createInterstitialAd();
+    }
+    
+    // Delay rewarded and native ads
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!_loadedRewardedAd) {
+        _createRewardedAd();
+      }
+    });
+    
+    // Future.delayed(const Duration(seconds: 5), () {
+    //   if (!_nativeAdIsLoaded) {
+    //     // _loadNativeAd();
+    //   }
+    // });
+  }
+
+  String get rewardedAdUnitId =>
+      Platform.isAndroid ? AdManager.rewardIdAndroid : AdManager.rewardIdiOS;
 
   String get interstitialAdUnitId => Platform.isAndroid
       ? AdManager.interstitialIdAndroid
       : AdManager.interstitialIdiOS;
+
+  String get nativeAdUnitId =>
+      Platform.isAndroid ? AdManager.nativeIdAndroid : AdManager.nativeIdiOS;
 
   // REWARDED AD
   void _createRewardedAd() {
@@ -92,7 +120,9 @@ AdProvider() {
 
   // INTERSTITIAL AD
   void _createInterstitialAd() {
-    debugPrint('INTERSTITIAL AD: Loading... (Attempt: $_numInterstitialLoadAttempts)');
+    debugPrint(
+      'INTERSTITIAL AD: Loading... (Attempt: $_numInterstitialLoadAttempts)',
+    );
     InterstitialAd.load(
       adUnitId: interstitialAdUnitId,
       request: request,
@@ -121,7 +151,9 @@ AdProvider() {
   void _startInterstitialTimer() {
     _interstitialTimer?.cancel();
     _counter++;
-    debugPrint('INTERSTITIAL TIMER: Started #$_counter (${AppConstants.interstitialAdShowingInterval}s)');
+    debugPrint(
+      'INTERSTITIAL TIMER: Started #$_counter (${AppConstants.interstitialAdShowingInterval}s)',
+    );
     _interstitialTimer = Timer(
       const Duration(seconds: AppConstants.interstitialAdShowingInterval),
       () {
@@ -170,12 +202,63 @@ AdProvider() {
     _interstitialAd = null;
   }
 
+  void _loadNativeAd() {
+    debugPrint('Native Ad: Loading...');
+
+    _nativeAd = NativeAd(
+      adUnitId: nativeAdUnitId,
+      factoryId:
+          'listTile', // TODO: Replace with your own factory ID (from AdMob registration)
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          debugPrint('Native Ad loaded successfully!');
+          _nativeAdIsLoaded = true;
+          notifyListeners();
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('Native Ad failed to load: $error');
+          ad.dispose();
+          _nativeAdIsLoaded = false;
+          notifyListeners();
+        },
+      ),
+      request: const AdRequest(),
+      customOptions: {'custom-option-1': 'custom-value-1'}, // Optional
+    );
+
+    _nativeAd!.load();
+  }
+
+  // Getter for loaded native ad (use in widgets)
+  NativeAd? get nativeAd => _nativeAdIsLoaded ? _nativeAd : null;
+
+  void loadNativeAd() {
+  if (_nativeAdIsLoaded) return; // Avoid duplicate load
+
+  _nativeAd = NativeAd(
+    adUnitId: nativeAdUnitId,
+    factoryId: 'listTile',
+    listener: NativeAdListener(
+      onAdLoaded: (ad) {
+        _nativeAdIsLoaded = true;
+        notifyListeners();
+      },
+      onAdFailedToLoad: (ad, error) {
+        ad.dispose();
+        _nativeAdIsLoaded = false;
+        notifyListeners();
+      },
+    ),
+    request: const AdRequest(),
+  )..load();
+}
+
   @override
   void dispose() {
     debugPrint('AdProvider: Disposing all ads...');
     _rewardedAd?.dispose();
     _interstitialAd?.dispose();
-    // _rewardedAd.dispose();
+    _nativeAd?.dispose();
     _interstitialTimer?.cancel();
     super.dispose();
   }

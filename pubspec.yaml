@@ -9,6 +9,8 @@ environment:
 dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
+  chunked_downloader: ^1.0.0
+  background_downloader: ^9.4.1
   event_bus: ^2.0.1
   flutter:
     sdk: flutter

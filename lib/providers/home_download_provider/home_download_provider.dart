@@ -139,6 +139,12 @@ class HomeAndDownloadProvider extends ChangeNotifier {
         notifyListeners();
       },
       onComplete: (filePath) async {
+        if (!context.mounted) {
+          debugPrint("Context not mounted — skipping ad/show");
+          finishDownload();
+          return;
+        }
+
         finishDownload();
         // Show success toast
         Fluttertoast.showToast(
