@@ -121,10 +121,12 @@ class HomeAndDownloadProvider extends ChangeNotifier {
   //   );
   // }
 
+
   Future<void> downloadVideo({
     required String userUrl,
     required int selectedLinkIndex,
     required BuildContext context,
+    
   }) async {
     if (videoMetaDataModel == null || isDownloading) return;
 
@@ -170,8 +172,10 @@ class HomeAndDownloadProvider extends ChangeNotifier {
       onError: (error) {
         finishDownload();
         Fluttertoast.showToast(msg: 'Download failed: $error');
-      },
+      }
     );
+
+    
   }
 
   void reset() {

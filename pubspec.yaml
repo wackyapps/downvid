@@ -11,6 +11,7 @@ dependencies:
   dio: ^5.9.0
   chunked_downloader: ^1.0.0
   background_downloader: ^9.4.1
+  device_info_plus: ^12.3.0
   event_bus: ^2.0.1
   flutter:
     sdk: flutter

@@ -2,6 +2,7 @@
 import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/providers/downloaded_video_list_provider/downloaded_video_list_provider.dart';
 import 'package:downvid/screens/downloaded/widgets/video_list_item_widget.dart';
+import 'package:downvid/service_locator.dart';
 import 'package:downvid/services/admob/native_ad_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,14 +20,25 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
   bool _hasLoaded = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getIt<DownloadedVideoListProvider>().loadDownloadedVideos(forceRefresh: true);
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_hasLoaded) {
       _hasLoaded = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Provider.of<DownloadedVideoListProvider>(context, listen: false)
-              .loadDownloadedVideos();
+          Provider.of<DownloadedVideoListProvider>(
+            context,
+            listen: false,
+          ).loadDownloadedVideos();
         }
       });
     }
@@ -42,37 +54,40 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
                 backgroundColor: const Color(0xFF3B82F6),
                 elevation: 0,
                 leading: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () async {
-                      final adProvider =
-                          Provider.of<AdProvider>(context, listen: false);
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () async {
+                    final adProvider = Provider.of<AdProvider>(
+                      context,
+                      listen: false,
+                    );
 
-                      if (adProvider.isInterstitialAvailable &&
-                          adProvider.loadedInterstitialAd) {
-                        debugPrint(
-                            'BACK FROM DOWNLOADS → SHOWING INTERSTITIAL');
+                    if (adProvider.isInterstitialAvailable &&
+                        adProvider.loadedInterstitialAd) {
+                      debugPrint('BACK FROM DOWNLOADS → SHOWING INTERSTITIAL');
 
-                        // Ad show karo, aur sirf dismiss hone ke baad back jao
-                        adProvider.showInterstitialAd(
-                          onAdShowedFullScreen: (ad) {},
-                          onAdDismissedFullScreen: (ad) {
-                            if (mounted) Navigator.pop(context);
-                          },
-                          onAdFailedToShowFullScreen: (ad, error) {
-                            if (mounted) Navigator.pop(context);
-                          },
-                        );
-                      } else {
-                        // Agar ad nahi ready → turant back
-                        Navigator.pop(context);
-                      }
-                    }),
+                      // Ad show karo, aur sirf dismiss hone ke baad back jao
+                      adProvider.showInterstitialAd(
+                        onAdShowedFullScreen: (ad) {},
+                        onAdDismissedFullScreen: (ad) {
+                          if (mounted) Navigator.pop(context);
+                        },
+                        onAdFailedToShowFullScreen: (ad, error) {
+                          if (mounted) Navigator.pop(context);
+                        },
+                      );
+                    } else {
+                      // Agar ad nahi ready → turant back
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
                 title: Text(
                   "All videos",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18.sp),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18.sp,
+                  ),
                 ),
               ),
             )
@@ -88,8 +103,9 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text("Refreshed"),
-                      duration: Duration(milliseconds: 800)),
+                    content: Text("Refreshed"),
+                    duration: Duration(milliseconds: 800),
+                  ),
                 );
               }
             },
@@ -119,9 +135,10 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
                     Text(
                       "No video history",
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[700]),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF738BAB)
+                      ),
                     ),
                     const SizedBox(height: 400),
                   ],

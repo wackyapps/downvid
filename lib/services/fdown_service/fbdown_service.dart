@@ -1,14 +1,14 @@
 // lib/services/fdown_service/fbdown_service.dart
 import 'dart:convert';
 import 'dart:io' show Directory, File;
-import 'package:chunked_downloader/chunked_downloader.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:downvid/models/video_meta_model/video_model.dart';
 import 'package:downvid/models/video_downloaded_model/video_downloaded_model.dart';
 import 'package:downvid/services/object_box/object_box_service.dart';
@@ -28,8 +28,7 @@ class FbDownService {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-      )
+          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36')
       ..setBackgroundColor(const Color(0x00000000))
       ..enableZoom(true)
       ..setNavigationDelegate(
@@ -37,8 +36,7 @@ class FbDownService {
           onPageStarted: (url) => debugPrint('WebView START → $url'),
           onPageFinished: (url) => debugPrint('WebView FINISH → $url'),
           onWebResourceError: (e) => debugPrint(
-            'WebView ERROR: ${e.description} (code ${e.errorCode})',
-          ),
+              'WebView ERROR: ${e.description} (code ${e.errorCode})'),
         ),
       );
 
@@ -50,8 +48,7 @@ class FbDownService {
       // If controller not initialized, initialize it
       if (_controller == null) {
         debugPrint(
-          'FbDownService.goHome → Controller is null. Initializing WebView...',
-        );
+            'FbDownService.goHome → Controller is null. Initializing WebView...');
         await initWebView();
       }
 
@@ -64,9 +61,7 @@ class FbDownService {
   }
 
   Future<VideoMetaDataModel?> fetchVideoMetaData(
-    String userUrl,
-    BuildContext context,
-  ) async {
+      String userUrl, BuildContext context) async {
     if (userUrl.isEmpty) return null;
 
     try {
@@ -93,8 +88,7 @@ class FbDownService {
           final resultPage = await _waitForResultPage(maxAttempts: 20);
           if (resultPage.contains('error=')) {
             Fluttertoast.showToast(
-              msg: 'This video is private or not supported.',
-            );
+                msg: 'This video is private or not supported.');
             return null;
           }
           meta = await _scrapeDownloadPage();
@@ -113,16 +107,14 @@ class FbDownService {
 
       // ✅ Log successful metadata
       debugPrint(
-        '[FbDownService] ✅ Metadata fetched successfully for URL: $userUrl',
-      );
+          '[FbDownService] ✅ Metadata fetched successfully for URL: $userUrl');
 
       // ✅ Reset WebView back to home immediately
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
           await goHome();
           debugPrint(
-            '[FbDownService] 🌐 WebView reset to home page successfully.',
-          );
+              '[FbDownService] 🌐 WebView reset to home page successfully.');
         } catch (e, st) {
           debugPrint('[FbDownService] ⚠️ Failed to reset WebView: $e\n$st');
         }
@@ -154,8 +146,7 @@ class FbDownService {
   Future<void> _fillAndSubmit(String url) async {
     // debugger();
 
-    final js =
-        '''
+    final js = '''
       (function(){
         const inp = document.querySelector('input[name="URLz"]');
         const btn = document.querySelector('.btn.btn-primary.input-lg');
@@ -171,8 +162,12 @@ class FbDownService {
 
   Future<String> _waitForResultPage({int maxAttempts = 40}) async {
     for (int i = 0; i < maxAttempts; i++) {
+
+
       // check during debug
       final url = (await _controller!.currentUrl()) ?? '';
+
+
 
       if (url.contains('download.php') || url.contains('error=')) {
         return url;
@@ -182,11 +177,11 @@ class FbDownService {
     throw Exception('Did not reach download.php or error page');
   }
 
-  Future<VideoMetaDataModel?> _scrapeDownloadPage() async {
-    // debugger();
+Future<VideoMetaDataModel?> _scrapeDownloadPage() async {
+  // debugger();
 
-    try {
-      final raw = await _controller!.runJavaScriptReturningResult('''
+  try {
+    final raw = await _controller!.runJavaScriptReturningResult('''
       (function(){
         const title = document.querySelector('meta[property="og:title"]')?.content ||
                       document.querySelector('title')?.innerText || 'Untitled Video';
@@ -222,270 +217,198 @@ class FbDownService {
       })();
     ''');
 
-      // Parse JSON string
-      String jsonString = raw.toString();
-      if (jsonString.startsWith('"') && jsonString.endsWith('"')) {
-        jsonString = jsonString.substring(1, jsonString.length - 1);
-      }
-      jsonString = jsonString.replaceAll(r'\"', '"').replaceAll(r'\\', r'\\');
+    // Parse JSON string
+    String jsonString = raw.toString();
+    if (jsonString.startsWith('"') && jsonString.endsWith('"')) {
+      jsonString = jsonString.substring(1, jsonString.length - 1);
+    }
+    jsonString = jsonString.replaceAll(r'\"', '"').replaceAll(r'\\', r'\\');
 
-      final Map<String, dynamic> data = jsonDecode(jsonString);
-      final List<dynamic> linkList = data['links'] ?? [];
+    final Map<String, dynamic> data = jsonDecode(jsonString);
+    final List<dynamic> linkList = data['links'] ?? [];
 
-      // Convert to VideoLinkModel
-      final videoLinks = linkList
-          .map(
-            (e) => VideoLinkModel(
+    // Convert to VideoLinkModel
+    final videoLinks = linkList
+        .map((e) => VideoLinkModel(
               link: (e['href'] ?? '') as String,
               quality: (e['quality'] ?? 'SD') as String,
               type: 'mp4',
-            ),
-          )
-          .where((link) => link.link.isNotEmpty)
-          .toList();
+            ))
+        .where((link) => link.link.isNotEmpty)
+        .toList();
 
-      // Return properly initialized model — no late, no double assignment
-      return VideoMetaDataModel(
-        title: data['title'] ?? 'Untitled Video',
-        description: '',
-        duration: data['duration'] ?? 'Unknown',
-        thumbnail: data['thumb'] ?? '',
-        videoLinks: videoLinks,
-        hasScrappingError: videoLinks.isEmpty, // ← Only set here, never again
-      );
-    } catch (e, st) {
-      debugPrint('❌ Error scraping download page: $e\n$st');
-      return null;
-    }
+    // Return properly initialized model — no late, no double assignment
+    return VideoMetaDataModel(
+      title: data['title'] ?? 'Untitled Video',
+      description: '',
+      duration: data['duration'] ?? 'Unknown',
+      thumbnail: data['thumb'] ?? '',
+      videoLinks: videoLinks,
+      hasScrappingError: videoLinks.isEmpty, // ← Only set here, never again
+    );
+
+  } catch (e, st) {
+    debugPrint('❌ Error scraping download page: $e\n$st');
+    return null;
   }
+}
 
-  // Future<void> downloadVideo({
-  //   required VideoMetaDataModel meta,
-  //   required int selectedLinkIndex,
-  //   required String userUrl,
-  //   required Function(double) onProgress,
-  //   required Function(String) onComplete,
-  //   required Function(String) onError,
-  // }) async {
-  //   final dio = Dio(BaseOptions(
-  //     connectTimeout: const Duration(seconds: 30),
-  //     receiveTimeout: const Duration(minutes: 30),
-  //     sendTimeout: const Duration(seconds: 30),
-  //     followRedirects: true,
-  //     maxRedirects: 10,
-  //     persistentConnection: true,
-  //     receiveDataWhenStatusError: true,
+Future<void> downloadVideo({
+  required VideoMetaDataModel meta,
+  required int selectedLinkIndex,
+  required String userUrl,
+  required Function(double) onProgress,
+  required Function(String) onComplete,
+  required Function(String) onError,
+}) async {
+  final dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(minutes: 30),
+    sendTimeout: const Duration(seconds: 30),
+    followRedirects: true,
+    maxRedirects: 10,
+    persistentConnection: true,
+    receiveDataWhenStatusError: true,
+  ));
 
-  //   ));
+  try {
+    final link = meta.videoLinks[selectedLinkIndex];
+    final safeTitle = (meta.title ?? "Video")
+        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+        .trim();
+    final fileName = '${safeTitle}_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-  //   try {
-  //     final link = meta.videoLinks[selectedLinkIndex];
-  //     final safeTitle = (meta.title ?? "Video")
-  //         .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
-  //         .trim();
-  //     final fileName = '${safeTitle}_${DateTime.now().millisecondsSinceEpoch}.mp4';
+    // Check Android version and request appropriate permission
+    int? androidSdkVersion;
+    
+    // Get Android SDK version if on Android platform
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        final deviceInfo = DeviceInfoPlugin();
+        final androidInfo = await deviceInfo.androidInfo;
+        androidSdkVersion = androidInfo.version.sdkInt;
+      } catch (e) {
+        debugPrint('Error getting Android version: $e');
+        // Fallback to storage permission if can't determine version
+        androidSdkVersion = 0;
+      }
+    }
 
-  //     // REQUEST ALL FILES ACCESS (this is the ONLY thing that works on Android 13+)
-  //     if (await Permission.videos.isDenied) {
-  //       final status = await Permission.videos.request();
-  //       if (!status.isGranted) {
-  //         Fluttertoast.showToast(
-  //           msg: "Media Storage permission required",
-  //           backgroundColor: Colors.red.shade700,
-  //         );
-  //         onError("Permission denied");
-  //         return;
-  //       }
-  //     }
-
-  //     // Create folder
-  //     final dir = Directory('/storage/emulated/0/Download/DownVid');
-  //     if (!await dir.exists()) await dir.create(recursive: true);
-
-  //     final filePath = '${dir.path}/$fileName';
-
-  //     debugPrint("Downloading to: $filePath");
-
-  //     // Direct download
-  // DateTime? lastUpdateTime;
-  //     double lastReportedProgress = 0.0;
-
-  //     await dio.download(
-  //       link.link,
-  //       filePath,
-  //       onReceiveProgress: (received, total) {
-  //         if (total <= 0) return;
-
-  //         final double progress = received / total;
-  //         final DateTime now = DateTime.now();
-
-  //         // Update only if:
-  //         // - At least 1% progress changed OR
-  //         // - 500ms passed since last update
-  //         final bool progressChangedEnough = (progress - lastReportedProgress).abs() >= 0.01;
-  //         final bool timePassed = lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds >= 500;
-
-  //         if (progressChangedEnough || timePassed) {
-  //           onProgress(progress);
-  //           lastReportedProgress = progress;
-  //           lastUpdateTime = now;
-  //         }
-  //       },
-  //       options: Options(
-  //         headers: {
-  //           'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro Build/AP2A.241205.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.6738.108 Mobile Safari/537.36',
-  //           'Referer': 'https://fdown.net/',
-  //           'Origin': 'https://fdown.net',
-  //           'Accept': '*/*',
-  //           'Connection': 'keep-alive',
-  //         },
-  //       ),
-  //     );
-
-  //     final file = File(filePath);
-  //     if (!await file.exists()) {
-  //       onError("File not saved");
-  //       return;
-  //     }
-
-  //     final sizeMB = (await file.length()) / (1024 * 1024);
-
-  //     // Save to ObjectBox
-  //     getIt<ObjectBox>().store.box<VideoDownloadedModel>().put(VideoDownloadedModel(
-  //       title: meta.title ?? "Untitled Video",
-  //       thumbnail: meta.thumbnail ?? "",
-  //       videoSocialUrl: link.link,
-  //       videoPath: filePath,
-  //       videoType: "mp4",
-  //       videoQuality: link.quality,
-  //       videoFileSize: "${sizeMB.toStringAsFixed(2)} MB",
-  //       videoDuration: meta.duration ?? "Unknown",
-  //       videoDownloadedDate: DateTime.now(),
-  //       originalUrl: userUrl,
-  //     ));
-
-  //     Fluttertoast.showToast(
-  //       msg: "Saved → Downloads",
-  //       toastLength: Toast.LENGTH_LONG,
-  //       gravity: ToastGravity.BOTTOM,
-  //       backgroundColor: Colors.green.shade600,
-  //       textColor: Colors.white,
-  //       fontSize: 16.0,
-  //     );
-
-  //     onComplete(filePath);
-
-  //   } catch (e, st) {
-  //     debugPrint("Download error: $e\n$st");
-  //     Fluttertoast.showToast(msg: "Download failed");
-  //     onError(e.toString());
-  //   }
-  // }
-
-  Future<void> downloadVideo({
-    required VideoMetaDataModel meta,
-    required int selectedLinkIndex,
-    required String userUrl,
-    required Function(double) onProgress,
-    required Function(String) onComplete,
-    required Function(String) onError,
-  }) async {
-    try {
-      final link = meta.videoLinks[selectedLinkIndex];
-      final safeTitle = (meta.title ?? "Video")
-          .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
-          .trim();
-      final fileName =
-          '${safeTitle}_${DateTime.now().millisecondsSinceEpoch}.mp4';
-
+    // Android 13 (API level 33) and above use VIDEO permission
+    // Android 12 and below use STORAGE permission
+    const android13SdkVersion = 33;
+    
+    if (androidSdkVersion != null && androidSdkVersion >= android13SdkVersion) {
+      // Android 13+ - request VIDEO permission
       if (await Permission.videos.isDenied) {
         final status = await Permission.videos.request();
         if (!status.isGranted) {
+          Fluttertoast.showToast(
+            msg: "Video permission required",
+            backgroundColor: Colors.red.shade700,
+          );
           onError("Permission denied");
           return;
         }
       }
-
-      final dir = Directory('/storage/emulated/0/Download/DownVid');
-      if (!await dir.exists()) await dir.create(recursive: true);
-
-      final finalFilePath = '${dir.path}/$fileName';
-      final tempFilePath = '$finalFilePath.tmp';
-
-      debugPrint("Starting FAST chunked download: $finalFilePath");
-
-      final downloader = ChunkedDownloader(
-        url: link.link,
-        saveFilePath: tempFilePath,
-        chunkSize: 8 * 1024 * 1024, // 8MB — max speed,
-        // maxConcurrentChunks: 4,
-        // timeout: const Duration(seconds: 30),
-        headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Mobile Safari/537.36',
-          'Accept': '*/*',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Range': 'bytes=0-', // Critical for fast resume/large files
-        },
-        onProgress: (received, total, speed) {
-          if (total > 0) {
-            onProgress(received / total);
-          }
-        },
-        onDone: (tempFile) async {
-          if (await tempFile.exists()) {
-            await tempFile.rename(finalFilePath);
-          }
-
-          final file = File(finalFilePath);
-          double sizeMB = 0.0;
-          if (await file.exists()) {
-            sizeMB = (await file.length()) / (1024 * 1024);
-          }
-
-          getIt<ObjectBox>().store.box<VideoDownloadedModel>().put(
-            VideoDownloadedModel(
-              title: meta.title ?? "Untitled Video",
-              thumbnail: meta.thumbnail ?? "",
-              videoSocialUrl: link.link,
-              videoPath: finalFilePath,
-              videoType: "mp4",
-              videoQuality: link.quality,
-              videoFileSize: "${sizeMB.toStringAsFixed(2)} MB",
-              videoDuration: meta.duration ?? "Unknown",
-              videoDownloadedDate: DateTime.now(),
-              originalUrl: userUrl,
-            ),
-          );
-
+    } else {
+      // Android <13 or non-Android platform - request STORAGE permission
+      if (await Permission.storage.isDenied) {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
           Fluttertoast.showToast(
-            msg: "Saved → Downloads",
-            backgroundColor: Colors.green.shade600,
-            textColor: Colors.white,
-            fontSize: 16.0,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.BOTTOM,
+            msg: "Storage permission required",
+            backgroundColor: Colors.red.shade700,
           );
-
-          onComplete(finalFilePath);
-        },
-        onError: (error) async {
-          debugPrint("Download failed: $error");
-          final tempFile = File(tempFilePath);
-          if (await tempFile.exists()) {
-            await tempFile.delete();
-          }
-          onError(error.toString());
-        },
-      );
-
-      await downloader.start();
-    } catch (e, st) {
-      debugPrint("Setup error: $e\n$st");
-      onError(e.toString());
+          onError("Permission denied");
+          return;
+        }
+      }
     }
+
+    // Create folder
+    final dir = Directory('/storage/emulated/0/Download/DownVid');
+    if (!await dir.exists()) await dir.create(recursive: true);
+
+    final filePath = '${dir.path}/$fileName';
+
+    debugPrint("Downloading to: $filePath");
+
+    // Direct download
+    DateTime? lastUpdateTime;
+    double lastReportedProgress = 0.0;
+
+    await dio.download(
+      link.link,
+      filePath,
+      onReceiveProgress: (received, total) {
+        if (total <= 0) return;
+
+        final double progress = received / total;
+        final DateTime now = DateTime.now();
+
+        // Update only if:
+        // - At least 1% progress changed OR
+        // - 500ms passed since last update
+        final bool progressChangedEnough = (progress - lastReportedProgress).abs() >= 0.01;
+        final bool timePassed = lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds >= 500;
+
+        if (progressChangedEnough || timePassed) {
+          onProgress(progress);
+          lastReportedProgress = progress;
+          lastUpdateTime = now;
+        }
+      },
+      options: Options(
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro Build/AP2A.241205.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.6738.108 Mobile Safari/537.36',
+          'Referer': 'https://fdown.net/',
+          'Origin': 'https://fdown.net',
+          'Accept': '*/*',
+          'Connection': 'keep-alive',
+        },
+      ),
+    );
+
+    final file = File(filePath);
+    if (!await file.exists()) {
+      onError("File not saved");
+      return;
+    }
+
+    final sizeMB = (await file.length()) / (1024 * 1024);
+
+    // Save to ObjectBox
+    getIt<ObjectBox>().store.box<VideoDownloadedModel>().put(VideoDownloadedModel(
+      title: meta.title ?? "Untitled Video",
+      thumbnail: meta.thumbnail ?? "",
+      videoSocialUrl: link.link,
+      videoPath: filePath,
+      videoType: "mp4",
+      videoQuality: link.quality,
+      videoFileSize: "${sizeMB.toStringAsFixed(2)} MB",
+      videoDuration: meta.duration ?? "Unknown",
+      videoDownloadedDate: DateTime.now(),
+      originalUrl: userUrl,
+    ));
+
+    Fluttertoast.showToast(
+      msg: "Saved → Downloads",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.green.shade600,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+
+    onComplete(filePath);
+
+  } catch (e, st) {
+    debugPrint("Download error: $e\n$st");
+    Fluttertoast.showToast(msg: "Download failed");
+    onError(e.toString());
   }
+}
 
   // -----------------------------
   // Optional debug WebView widget
@@ -493,8 +416,6 @@ class FbDownService {
   Widget? get debugWebView {
     if (!showWebView || _controller == null) return null;
     return SizedBox(
-      height: 90.h,
-      child: WebViewWidget(controller: _controller!),
-    );
+        height: 90.h, child: WebViewWidget(controller: _controller!));
   }
 }

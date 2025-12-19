@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/providers/downloaded_video_list_provider/downloaded_video_list_provider.dart';
 import 'package:downvid/providers/home_download_provider/home_download_provider.dart';
@@ -7,10 +6,9 @@ import 'package:downvid/providers/theme_provider/theme_provider.dart';
 import 'package:downvid/screens/downloaded/downloaded_list_screen.dart';
 import 'package:downvid/screens/home/home_screen.dart';
 import 'package:downvid/screens/home/remove_ads/remove_ads_screen.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:downvid/screens/setttings/languages_list_screen.dart';
 import 'package:downvid/service_locator.dart';
-import 'package:downvid/services/fdown_service/fbdown_service.dart';
-import 'package:downvid/services/object_box/object_box_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
@@ -20,6 +18,8 @@ import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await FileDownloader().configure();
 
   MobileAds.instance.initialize();
 
@@ -32,26 +32,22 @@ void main() async {
   }
 
   // initialize media store
- if (Platform.isAndroid) {
-    MediaStore.appFolder = "DownVid";  // Creates /Download/DownVid
+  if (Platform.isAndroid) {
+    MediaStore.appFolder = "DownVid"; // Creates /Download/DownVid
     await MediaStore.ensureInitialized();
   }
 
-  if (Platform.isAndroid) {
-    await Permission.storage.request();
-  }
-
-  runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (_) => ThemeProvider()),
-    ChangeNotifierProvider(create: (_) => AdProvider()),
-    ChangeNotifierProvider(create: (context) => HomeAndDownloadProvider()),
-    ChangeNotifierProvider(create: (_) => DownloadedVideoListProvider()),
-  ], child: const MyApp()));
-
-  // THIS IS THE ONLY SAFE PLACE TO LOAD
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    getIt<DownloadedVideoListProvider>().loadDownloadedVideos();
-  });
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AdProvider()),
+        ChangeNotifierProvider(create: (context) => HomeAndDownloadProvider()),
+        ChangeNotifierProvider(create: (_) => DownloadedVideoListProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -85,11 +81,7 @@ class MyApp extends StatelessWidget {
           initialRoute: "/home",
           routes: {
             '/home': (context) => const HomeScreen(),
-            // '/settings': (context) => const SettingsListScreen(),
             '/downloaded': (context) => const DownloadedListScreen(),
-            // '/how_to': (context) => const HowToSliderScree(),
-            '/remove_ads': (context) => const RemoveAdsScreen(),
-            '/languages': (context) => const LanguagesListScreen(),
           },
         );
       },
