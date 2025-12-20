@@ -20,8 +20,6 @@ class HomeVideoFetchAndListScreen extends StatefulWidget {
 class _HomeVideoFetchAndListScreenState
     extends State<HomeVideoFetchAndListScreen>
     with WidgetsBindingObserver {
-  // 👈 Add observer mixin
-
   late HomeAndDownloadProvider _homeAndDownloadProvider;
   final TextEditingController _controller = TextEditingController();
 
@@ -30,29 +28,24 @@ class _HomeVideoFetchAndListScreenState
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // 👇 Delay to ensure context is available
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _homeAndDownloadProvider = Provider.of<HomeAndDownloadProvider>(
         context,
         listen: false,
       );
-      // _controller.text = "https://www.facebook.com/share/r/17baJM8urB/";
       _checkClipboardForFacebookUrl();
-      _initShareListener(); // 👈 updated
+      _initShareListener();
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 👇 Detect when app comes to foreground
     if (state == AppLifecycleState.resumed) {
       _checkClipboardForFacebookUrl();
     }
   }
 
   void _initShareListener() {
-    // 🔄 Listen for new shared content while app is in memory
     ReceiveSharingIntent.instance.getMediaStream().listen(
       (List<SharedMediaFile> sharedFiles) {
         if (sharedFiles.isNotEmpty) {
@@ -69,7 +62,6 @@ class _HomeVideoFetchAndListScreenState
       },
     );
 
-    // 🧩 Handle content shared when app was launched from closed state
     ReceiveSharingIntent.instance
         .getInitialMedia()
         .then((List<SharedMediaFile> sharedFiles) {
@@ -87,71 +79,8 @@ class _HomeVideoFetchAndListScreenState
         });
   }
 
-  // Future<void> _handleSharedUrl(String sharedText) async {
-  //   // ← YEHI LINE ADD KAR DO — extra spaces aur empty parts hata do
-  //   final cleanText = sharedText.trim().replaceAll(RegExp(r'\s+'), ' ');
-
-  //   if (!SocialUrlUtilities.isValidVideoUrl(cleanText)) {
-  //     debugPrint("Invalid URL received via share: $cleanText");
-  //     return;
-  //   }
-
-  //   final parsedUrl = SocialUrlUtilities.getFacebookUrl(cleanText);
-  //   _homeAndDownloadProvider.url = parsedUrl;
-  //   _controller.text = cleanText;
-
-  //   _showLoadingDialog(context);
-
-  //   try {
-  //     final videoModel = await _homeAndDownloadProvider.fetchVideoMetaData(
-  //       context: context,
-  //       url: parsedUrl,
-  //     );
-
-  //     _dismissLoadingDialog();
-
-  //     if (videoModel != null && videoModel.videoLinks.isNotEmpty) {
-  //       bottomVideoMetaBottomSheet(
-  //         context: context,
-  //         sheetHeight: 70.0.h,
-  //         userUrl: cleanText,
-  //       );
-  //     } else {
-  //       Fluttertoast.showToast(msg: 'No downloadable video found');
-  //     }
-  //   } catch (e) {
-  //     _dismissLoadingDialog();
-  //     Fluttertoast.showToast(msg: 'Error: $e');
-  //   }
-  // }
-
   Future<void> _handleSharedUrl(String sharedText) async {
-    // final cleanUrl = sharedText
-    //     .replaceAll('\u2028', '')
-    //     .replaceAll('\r', '')
-    //     .replaceAll('\n', '')
-    //     .trim();
-
-    // debugPrint("RAW LENGTH: ${sharedText.length}");
-    // debugPrint("CLEAN LENGTH: ${cleanUrl.length}");
-    // debugPrint("CLEAN URL: $cleanUrl");
-
-    // if (!SocialUrlUtilities.isValidVideoUrl(cleanUrl)) {
-    //   debugPrint("Invalid URL after cleaning");
-    //   return;
-    // }
-
-    /**
-   * Yahan par humne URL ko clean kar diya hai aur phir use parse karke
-   * HomeAndDownloadProvider mein set kar diya hai. Baad mein hum video metadata
-   */
-
-    // final parsedUrl = SocialUrlUtilities.getFacebookUrl(cleanUrl);
-    // final parsedUrl = sharedText; // Yahan par aap apna URL parsing logic laga sakte hain
-
-    // _controller.text = cleanUrl;
     _controller.text = sharedText;
-    // _homeAndDownloadProvider.url = parsedUrl;
     _homeAndDownloadProvider.url = sharedText;
 
     _showLoadingDialog(context);
@@ -179,7 +108,6 @@ class _HomeVideoFetchAndListScreenState
     }
   }
 
-  /// ✅ Automatically checks clipboard and pastes Facebook URLs
   Future<void> _checkClipboardForFacebookUrl() async {
     try {
       final clipboardData = await Clipboard.getData('text/plain');
@@ -187,7 +115,6 @@ class _HomeVideoFetchAndListScreenState
 
       if (clipboardText.isEmpty) return;
 
-      // Simple Facebook URL detection
       final regex = RegExp(
         r'(https?:\/\/(?:www\.)?(?:facebook|fb)\.com\/[^\s]+)',
         caseSensitive: false,
@@ -197,12 +124,9 @@ class _HomeVideoFetchAndListScreenState
       if (match != null) {
         final fbUrl = match.group(0)!;
 
-        // Only auto-paste if TextField is empty
         if (_controller.text.isEmpty) {
           _controller.text = fbUrl;
-          _homeAndDownloadProvider.url = SocialUrlUtilities.getFacebookUrl(
-            fbUrl,
-          );
+          _homeAndDownloadProvider.url = SocialUrlUtilities.getFacebookUrl(fbUrl);
           setState(() {});
           Fluttertoast.showToast(
             msg: 'Facebook link pasted automatically',
@@ -217,17 +141,11 @@ class _HomeVideoFetchAndListScreenState
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this); // 👈 Remove observer
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  // 🧩 rest of your code remains exactly the same...
-
-  // 🌀 Simple reusable loader dialog
-  void _showLoadingDialog(
-    BuildContext context, {
-    String message = "Fetching video data.\nPlease wait...",
-  }) {
+  void _showLoadingDialog(BuildContext context, {String message = "Fetching video data.\nPlease wait..."}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -243,17 +161,12 @@ class _HomeVideoFetchAndListScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(
-                strokeWidth: 3,
-                color: Color(0xFF3B82F6),
-              ),
+              const CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF3B82F6)),
               SizedBox(height: 2.h),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -266,15 +179,56 @@ class _HomeVideoFetchAndListScreenState
     if (Navigator.canPop(context)) Navigator.pop(context);
   }
 
+  // NEW: Dynamic Button Logic
+  void _onDynamicButtonPressed() async {
+    final url = _controller.text.trim();
+
+    if (url.isEmpty) {
+      // Paste Link Action
+      final clipboardData = await Clipboard.getData('text/plain');
+      if (clipboardData != null && clipboardData.text!.trim().isNotEmpty) {
+        _controller.text = clipboardData.text!.trim();
+        _homeAndDownloadProvider.url = SocialUrlUtilities.getFacebookUrl(clipboardData.text!);
+        setState(() {});
+      } else {
+        Fluttertoast.showToast(msg: 'No link found in clipboard');
+      }
+    } else {
+      // Download Action
+      _showLoadingDialog(context);
+      try {
+        final videoModel = await _homeAndDownloadProvider.fetchVideoMetaData(
+          context: context,
+          url: url,
+        );
+        _dismissLoadingDialog();
+        if (videoModel != null && !videoModel.hasScrappingError) {
+          bottomVideoMetaBottomSheet(
+            context: context,
+            sheetHeight: 70.0.h,
+            userUrl: url,
+          );
+        } else {
+          Fluttertoast.showToast(msg: 'Failed to fetch video metadata');
+        }
+      } catch (e) {
+        _dismissLoadingDialog();
+        Fluttertoast.showToast(msg: 'Error fetching metadata: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool hasUrl = _controller.text.trim().isNotEmpty;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // === Paste Field + Buttons ===
+            // === Paste Field ===
             Row(
               children: [
                 Expanded(
@@ -294,20 +248,16 @@ class _HomeVideoFetchAndListScreenState
                       controller: _controller,
                       onChanged: (value) {
                         if (value.isNotEmpty) {
-                          _homeAndDownloadProvider.url =
-                              SocialUrlUtilities.getFacebookUrl(value);
+                          _homeAndDownloadProvider.url = SocialUrlUtilities.getFacebookUrl(value);
                         }
-                        setState(() {});
+                        setState(() {}); // Trigger button update
                       },
                       cursorColor: Colors.black,
                       style: const TextStyle(fontSize: 15),
                       decoration: const InputDecoration(
                         hintText: 'Paste link to download',
                         hintStyle: TextStyle(color: Colors.black45),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         border: InputBorder.none,
                       ),
                     ),
@@ -317,104 +267,30 @@ class _HomeVideoFetchAndListScreenState
             ),
             SizedBox(height: 1.5.h),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Paste Button
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final clipboardData = await Clipboard.getData(
-                        'text/plain',
-                      );
-                      if (clipboardData != null &&
-                          clipboardData.text!.isNotEmpty) {
-                        _controller.text = clipboardData.text!;
-                        _homeAndDownloadProvider.url =
-                            SocialUrlUtilities.getFacebookUrl(
-                              clipboardData.text!,
-                            );
-                        setState(() {});
-                      } else {
-                        Fluttertoast.showToast(
-                          msg: 'No link found in clipboard',
-                        );
-                      }
-                    },
-                    child: Container(
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE9E7FC),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Paste Link',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+            // === DYNAMIC SINGLE BUTTON ===
+            SizedBox(
+              width: double.infinity,
+              height: 6.h,
+              // width: 4.w,
+              child: GestureDetector(
+                onTap: _onDynamicButtonPressed,
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: hasUrl ? const Color(0xFF3B82F6) : const Color(0xFFE9E7FC),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    hasUrl ? 'Download' : 'Paste Link',
+                    style: TextStyle(
+                      color: hasUrl ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
-                // Download Button
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final url = _controller.text.trim();
-                      if (url.isEmpty) {
-                        Fluttertoast.showToast(msg: 'Please enter a video URL');
-                        return;
-                      }
-                      _showLoadingDialog(context);
-                      try {
-                        final videoModel = await _homeAndDownloadProvider
-                            .fetchVideoMetaData(context: context, url: url);
-                        _dismissLoadingDialog();
-                        if (videoModel != null &&
-                            (!videoModel.hasScrappingError)) {
-                          bottomVideoMetaBottomSheet(
-                            context: context,
-                            sheetHeight: 70.0.h,
-                            userUrl: _controller.text.trim(),
-                          );
-                        } else {
-                          Fluttertoast.showToast(
-                            msg: 'Failed to fetch video metadata',
-                          );
-                        }
-                      } catch (e) {
-                        _dismissLoadingDialog();
-                        Fluttertoast.showToast(
-                          msg: 'Error fetching metadata: $e',
-                        );
-                      }
-                    },
-                    child: Container(
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Download',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-
-            // SizedBox(height: 4.h), // Space before ad
-            // BANNER AD HERE — PERFECT POSITION
-            // const Center(child: BannerAdWidget()),
 
             SizedBox(height: 34.h),
 
@@ -431,23 +307,15 @@ class _HomeVideoFetchAndListScreenState
             SizedBox(height: 1.h),
 
             _buildStep(1, "Open Facebook and the link of a video of choice"),
-            _buildStep(
-              2,
-              "Open “DownVid” and Press Paste to Paste the link of the video",
-            ),
-            _buildStep(
-              3,
-              "Press Download and Choose the quality of the video you want to download",
-            ),
+            _buildStep(2, "Open “DownVid” and Press Paste to Paste the link of the video"),
+            _buildStep(3, "Press Download and Choose the quality of the video you want to download"),
             _buildStep(4, "Your Done! The download will start automatically."),
-            // SizedBox(height: 5.h), // Extra bottom space
           ],
         ),
       ),
     );
   }
 
-  /// ✅ Helper Widget for Steps
   Widget _buildStep(int number, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
