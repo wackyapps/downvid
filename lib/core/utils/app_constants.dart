@@ -22,5 +22,5 @@ class AppConstants {
   // static const String appShareSubject = "Sleeply App";
 
   // interstitial ad showing intervale delay in seconds
-  static const int interstitialAdShowingInterval = 50;
+  static const int interstitialAdShowingInterval = 35;
 }

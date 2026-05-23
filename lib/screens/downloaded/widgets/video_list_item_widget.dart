@@ -1,4 +1,5 @@
 import 'package:downvid/models/video_downloaded_model/video_downloaded_model.dart';
+import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:downvid/providers/downloaded_video_list_provider/downloaded_video_list_provider.dart';
 import 'package:downvid/screens/video_player_screen/video_player_screen.dart';
 import 'package:flutter/material.dart';
@@ -72,24 +73,75 @@ class VideoListItemWidget extends StatelessWidget {
                                     style:
                                         Theme.of(context).textTheme.bodyMedium)
                               ]),
+                          // Row(
+                          //     mainAxisAlignment: MainAxisAlignment.center,
+                          //     children: [
+                          //       // play icon
+                          //       const SizedBox(width: 5),
+                          //       IconButton(
+                          //           onPressed: () {
+                          //             // Navigate to player screen
+                          //             // use an existing property from the model as the video path
+                          //             // final String videoPath =
+                          //             // videoDownloadedModel.videoPath;
+                          //             Navigator.push(
+                          //               context,
+                          //               MaterialPageRoute(
+                          //                 builder: (_) => VideoPlayerScreen(
+                          //                     video: videoDownloadedModel),
+                          //               ),
+                          //             );
+                          //           },
+                          //           icon: const Icon(Icons.play_circle_outlined,
+                          //               size: 28, color: Color(0xFF3B82F6))),
                           Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 // play icon
                                 const SizedBox(width: 5),
                                 IconButton(
-                                    onPressed: () {
-                                      // Navigate to player screen
-                                      // use an existing property from the model as the video path
-                                      // final String videoPath =
-                                      // videoDownloadedModel.videoPath;
-                                      Navigator.push(
+                                    onPressed: () async {
+                                      final adProvider = Provider.of<AdProvider>(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (_) => VideoPlayerScreen(
-                                              video: videoDownloadedModel),
-                                        ),
+                                        listen: false,
                                       );
+
+                                      // Show interstitial ad before opening player
+                                      if (adProvider.isInterstitialAvailable &&
+                                          adProvider.loadedInterstitialAd) {
+                                        adProvider.showInterstitialAd(
+                                          onAdShowedFullScreen: (_) {},
+                                          onAdDismissedFullScreen: (_) {
+                                            // Navigate after ad is closed
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => VideoPlayerScreen(
+                                                    video: videoDownloadedModel),
+                                              ),
+                                            );
+                                          },
+                                          onAdFailedToShowFullScreen: (_, error) {
+                                            // If ad fails, navigate directly
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => VideoPlayerScreen(
+                                                    video: videoDownloadedModel),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        // No ad available → direct navigation
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => VideoPlayerScreen(
+                                                video: videoDownloadedModel),
+                                          ),
+                                        );
+                                      }
                                     },
                                     icon: const Icon(Icons.play_circle_outlined,
                                         size: 28, color: Color(0xFF3B82F6))),

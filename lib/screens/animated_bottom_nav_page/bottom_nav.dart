@@ -1,4 +1,6 @@
+import 'package:downvid/providers/ad_provider/ads_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,9 +14,28 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final adProvider = Provider.of<AdProvider>(context, listen: false);
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: onTap,
+      onTap: (index) async {
+        // Show interstitial ad BEFORE switching tab
+        if (adProvider.isInterstitialAvailable && adProvider.loadedInterstitialAd) {
+          adProvider.showInterstitialAd(
+            onAdShowedFullScreen: (_) {},
+            onAdDismissedFullScreen: (_) {
+              // Switch tab AFTER ad is dismissed
+              onTap(index);
+            },
+            onAdFailedToShowFullScreen: (_, error) {
+              // If ad fails, switch tab anyway
+              onTap(index);
+            },
+          );
+        } else {
+          // No ad available → switch tab directly
+          onTap(index);
+        }
+      },
       backgroundColor: Colors.white,
       elevation: 8,
       type: BottomNavigationBarType.fixed,

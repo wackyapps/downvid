@@ -154,28 +154,25 @@ class HomeAndDownloadProvider extends ChangeNotifier {
           backgroundColor: Colors.green,
           textColor: Colors.white,
         );
-        // Show ad logic...
-        final prefs = await SharedPreferences.getInstance();
-        int totalDownloads = (prefs.getInt('total_downloads') ?? 0) + 1;
-        await prefs.setInt('total_downloads', totalDownloads);
-        if (totalDownloads % 3 == 0) {
-          final adProvider = Provider.of<AdProvider>(context, listen: false);
-          if (adProvider.isInterstitialAvailable) {
-            adProvider.showInterstitialAd(
-              onAdShowedFullScreen: (_) {},
-              onAdDismissedFullScreen: (_) {},
-              onAdFailedToShowFullScreen: (_, error) {},
-            );
-          }
+       // GUARANTEED INTERSTITIAL AD AFTER EVERY DOWNLOAD
+        final adProvider = Provider.of<AdProvider>(context, listen: false);
+        if (adProvider.isInterstitialAvailable && adProvider.loadedInterstitialAd) {
+          adProvider.showInterstitialAd(
+            onAdShowedFullScreen: (_) {},
+            onAdDismissedFullScreen: (_) {},
+            onAdFailedToShowFullScreen: (_, error) {
+              debugPrint('Interstitial failed to show: $error');
+            },
+          );
+        } else {
+          debugPrint('Interstitial not available — skipping');
         }
       },
       onError: (error) {
         finishDownload();
         Fluttertoast.showToast(msg: 'Download failed: $error');
-      }
+      },
     );
-
-    
   }
 
   void reset() {
