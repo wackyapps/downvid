@@ -39,7 +39,7 @@ android {
         applicationId = "com.fbreels.downloader"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 5
+        versionCode = 6
         versionName = flutter.versionName
     }
 
