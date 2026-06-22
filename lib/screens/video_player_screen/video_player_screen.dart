@@ -16,9 +16,20 @@ class VideoPlayerScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
           onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          video.title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: FutureBuilder<String>(
@@ -70,36 +81,36 @@ class _VideoPlayerBody extends StatelessWidget {
 
             // 2. Bottom Controls – FIXED HEIGHT, NEVER OVERFLOWS
             Material(
-              color: Colors.black54,
+              color: Colors.black.withOpacity(0.6),
               child: SizedBox(
-                height: 100, // Fixed safe height (works on all phones)
+                height: 110, // Fixed safe height (works on all phones)
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Play/Pause Button – reduced size
                     IconButton(
-                      iconSize: 56, // was 60–72 → now safe
+                      iconSize: 50,
                       onPressed: player.toggle,
                       icon: Icon(
-                        player.isPlaying ? Icons.pause_circle : Icons.play_circle,
+                        player.isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_filled_rounded,
                         color: Colors.white,
-                        size: 56,
+                        size: 50,
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
 
                     // Progress bar – minimal padding
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: VideoProgressIndicator(
                         controller,
                         allowScrubbing: true,
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         colors: const VideoProgressColors(
-                          playedColor: Colors.red,
-                          bufferedColor: Colors.white70,
-                          backgroundColor: Colors.white30,
+                          playedColor: Color(0xFF2563EB),
+                          bufferedColor: Colors.white54,
+                          backgroundColor: Colors.white24,
                         ),
                       ),
                     ),

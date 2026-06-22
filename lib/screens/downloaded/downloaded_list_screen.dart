@@ -51,10 +51,32 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
           ? PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: AppBar(
-                backgroundColor: const Color(0xFF3B82F6),
+                backgroundColor: Colors.transparent,
                 elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: Theme.of(context).brightness == Brightness.dark
+                          ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                          : [const Color(0xFF2563EB), const Color(0xFF3B82F6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                ),
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 26),
                   onPressed: () async {
                     final adProvider = Provider.of<AdProvider>(
                       context,
@@ -65,7 +87,6 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
                         adProvider.loadedInterstitialAd) {
                       debugPrint('BACK FROM DOWNLOADS → SHOWING INTERSTITIAL');
 
-                      // Ad show karo, aur sirf dismiss hone ke baad back jao
                       adProvider.showInterstitialAd(
                         onAdShowedFullScreen: (ad) {},
                         onAdDismissedFullScreen: (ad) {
@@ -76,17 +97,17 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
                         },
                       );
                     } else {
-                      // Agar ad nahi ready → turant back
                       Navigator.pop(context);
                     }
                   },
                 ),
-                title: Text(
-                  "All videos",
+                title: const Text(
+                  "All Videos",
                   style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -119,6 +140,10 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white60 : const Color(0xFF738BAB);
+    final primaryColor = isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -127,21 +152,44 @@ class _DownloadedListScreenState extends State<DownloadedListScreen> {
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset('assets/icon/empty_folder.png', width: 160),
-                    const SizedBox(height: 16),
-                    Text(
-                      "No video history",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF738BAB)
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.cloud_download_outlined,
+                          size: 72,
+                          color: primaryColor,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 400),
-                  ],
+                      const SizedBox(height: 24),
+                      Text(
+                        "No Saved Videos",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Videos you download will appear here.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

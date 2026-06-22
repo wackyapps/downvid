@@ -17,61 +17,83 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final iconColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+
     return Drawer(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          topRight: Radius.circular(24),
+          topRight: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drawer header with back arrow and title
+              // Beautiful Header
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.download_for_offline_rounded,
+                          color: iconColor,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "DownVid",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: textColor,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          // Text(
+                          //   "v1.0.0",
+                          //   style: TextStyle(
+                          //     fontSize: 12,
+                          //     fontWeight: FontWeight.w500,
+                          //     color: isDark ? Colors.white54 : Colors.black45,
+                          //   ),
+                          // ),
+                        ],
+                      ),
+                    ],
+                  ),
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        size: 20, color: Colors.black87),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                    icon: Icon(Icons.close_rounded, color: textColor),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const SizedBox(width: 4),
-                  // const Padding(
-                  //   padding: EdgeInsets.fromLTRB(60.0, 0, 0, 0),
-                  const Text(
-                    "Settings",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2563EB), // Blue title color
-                    ),
-                  ),
-                  // ),
                 ],
               ),
-              // const Divider(
-              //   height: 15,
-              //   endIndent: 50.0,
-              //   indent: 50.0,
+              const SizedBox(height: 24),
+              Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
+              const SizedBox(height: 24),
 
-              // ),
-
-              const SizedBox(height: 12),
-
-              // Drawer menu items
-              // _buildDrawerItem(
-              //   icon: Icons.language,
-              //   text: "Language",
-              //   onTap: () => Navigator.pushNamed(context, '/languages'),
-              // ),
-              const SizedBox(height: 5),
+              // Drawer Menu Items
               _buildDrawerItem(
-                icon: Icons.star_border,
+                context,
+                icon: Icons.star_rounded,
                 text: "Rate Us",
+                description: "Support us with a 5-star rating",
                 onTap: () {
                   try {
                     inAppReview.openStoreListing();
@@ -80,37 +102,34 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   }
                 },
               ),
-
-              const SizedBox(height: 5),
-
+              const SizedBox(height: 12),
               _buildDrawerItem(
-                icon: Icons.feedback_outlined,
+                context,
+                icon: Icons.chat_bubble_rounded,
                 text: "Feedback",
+                description: "Tell us how to improve the app",
                 onTap: () async {
                   final Uri url = Uri.parse(
                       'https://mail.google.com/mail/u/0/?view=cm&fs=1&to=ramiqwaqas@gmail.com&su=Feedback for DownVid&body=Hello,\n\nI love DownVid because...\n\nThank you!');
-
                   await launchUrl(url, mode: LaunchMode.externalApplication);
                 },
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 12),
               _buildDrawerItem(
-                  icon: Icons.download_outlined,
-                  text: "Downloads",
-                  onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const DownloadedListScreen(fromDrawer: true),
-                        ),
-                      )),
-
-              const SizedBox(height: 5),
-              // _buildDrawerItem(
-              //   icon: Icons.privacy_tip_outlined,
-              //   text: "Privacy Policy",
-              //   onTap: () => Navigator.pushNamed(context, '/privacy'),
-              // ),
+                context,
+                icon: Icons.cloud_download_rounded,
+                text: "Downloads",
+                description: "View all your saved videos",
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DownloadedListScreen(fromDrawer: true),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -118,23 +137,67 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
   }
 
-  Widget _buildDrawerItem({
+  Widget _buildDrawerItem(
+    BuildContext context, {
     required IconData icon,
     required String text,
+    required String description,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      dense: true,
-      leading: Icon(icon, color: Colors.black87),
-      title: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.black87,
-          fontWeight: FontWeight.w500,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 26),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: isDark ? Colors.white38 : Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white24 : Colors.black26,
+            ),
+          ],
         ),
       ),
-      onTap: onTap,
     );
   }
 }

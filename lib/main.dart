@@ -65,19 +65,48 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'DownVid',
           theme: ThemeData(
-            primarySwatch: Colors.blue,
-            brightness: Brightness.light,
+            useMaterial3: true,
+            primaryColor: const Color(0xFF2563EB),
+            scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2563EB),
+              primary: const Color(0xFF2563EB),
+              secondary: const Color(0xFF3B82F6),
+              background: const Color(0xFFF8FAFC),
+              surface: Colors.white,
+              brightness: Brightness.light,
+            ),
+            cardTheme: const CardThemeData(
+              color: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
+            ),
           ),
-          darkTheme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: Colors.black,
-            colorScheme: const ColorScheme.dark().copyWith(
-              primary: Colors.blueAccent,
-              secondary: Colors.blueAccent,
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            primaryColor: const Color(0xFF3B82F6),
+            scaffoldBackgroundColor: const Color(0xFF0F172A),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color.fromARGB(255, 173, 192, 224),
+              primary: const Color(0xFF3B82F6),
+              secondary: const Color(0xFF60A5FA),
+              background: const Color(0xFF0F172A),
+              surface: const Color(0xFF1E293B),
+              brightness: Brightness.dark,
+            ),
+            cardTheme: const CardThemeData(
+              color: Color(0xFF1E293B),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
             ),
           ),
           themeMode: themeProvider.isDarkMode
               ? ThemeMode.dark
-              : ThemeMode.light, // ⚡ Important
+              : ThemeMode.light,
           initialRoute: "/home",
           routes: {
             '/home': (context) => const HomeScreen(),

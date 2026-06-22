@@ -9,14 +9,15 @@ Future<void> bottomVideoMetaBottomSheet({
   required double sheetHeight,
   required String userUrl,
 }) async {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(16),
-        topRight: Radius.circular(16),
+        topLeft: Radius.circular(24),
+        topRight: Radius.circular(24),
       ),
     ),
     builder: (BuildContext sheetContext) {
@@ -49,29 +50,53 @@ Future<void> bottomVideoMetaBottomSheet({
   );
 }
 
-// ───────────────────────────────────────────── Error State (unchanged)
+// ───────────────────────────────────────────── Error State
 Widget _buildErrorState(BuildContext context, double sheetHeight) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final textColor = isDark ? Colors.white : Colors.black87;
+
   return Container(
     height: sheetHeight,
-    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+    padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
     child: Column(
       children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black12,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        SizedBox(height: 2.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Download Options", style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
-            IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded)),
+            Text("Download Options", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800, color: textColor)),
+            IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close_rounded, color: textColor)),
           ],
         ),
         const Spacer(),
+        const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 64),
+        const SizedBox(height: 16),
         Text('No video found.\nCheck the link and try again.',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 14.sp, color: Colors.grey[700])),
-        const SizedBox(height: 20),
-        ElevatedButton.icon(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text("Retry"),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.grey[700])),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: 50.w,
+          height: 5.5.h,
+          child: ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            label: const Text("Retry", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
         ),
         const Spacer(),
       ],
@@ -88,18 +113,35 @@ Widget _buildDownloadOptions({
   required double sheetHeight,
   required String userUrl,
 }) {
+  final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
+  final primaryColor = isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB);
+  final textColor = isDark ? Colors.white : Colors.black87;
+
   return Container(
     height: sheetHeight,
-    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+    padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Grabber bar
+        Center(
+          child: Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black12,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        SizedBox(height: 2.h),
+
         // Header + Close
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Download Options", style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
-            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded)),
+            Text("Download Options", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800, color: textColor)),
+            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: Icon(Icons.close_rounded, color: textColor)),
           ],
         ),
         SizedBox(height: 2.h),
@@ -109,29 +151,43 @@ Widget _buildDownloadOptions({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               child: Image.network(
                 meta.thumbnail ?? '',
-                width: 30.w,
-                height: 20.h,
+                width: 32.w,
+                height: 12.h,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  width: 30.w,
-                  height: 20.h,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.broken_image, size: 40),
+                  width: 32.w,
+                  height: 12.h,
+                  color: isDark ? const Color(0xFF0F172A) : Colors.grey[200],
+                  child: const Icon(Icons.broken_image, size: 40, color: Colors.grey),
                 ),
               ),
             ),
-            SizedBox(width: 3.w),
+            SizedBox(width: 4.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(meta.title ?? 'Untitled', maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
-                  SizedBox(height: 0.5.h),
-                  Text(meta.duration ?? '--', style: TextStyle(fontSize: 13.sp, color: Colors.grey[700])),
+                  Text(
+                    meta.title ?? 'Untitled Video',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: textColor, height: 1.3),
+                  ),
+                  SizedBox(height: 1.h),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      meta.duration ?? '--:--',
+                      style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700, color: primaryColor),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -140,47 +196,61 @@ Widget _buildDownloadOptions({
         SizedBox(height: 3.h),
 
         // Resolutions
-        Text("Resolutions", style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.grey[800])),
-        SizedBox(height: 1.h),
-        ...meta.videoLinks.asMap().entries.map((entry) {
-          final index = entry.key;
-          final link = entry.value;
-          if (!link.quality.toLowerCase().contains('hd') && !link.quality.toLowerCase().contains('sd')) {
-            return const SizedBox.shrink();
-          }
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 0.8.h),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: provider.selectedLinkIndex == index ? Colors.blue.shade50 : Colors.grey.shade100,
-              border: Border.all(
-                color: provider.selectedLinkIndex == index ? Colors.blueAccent : Colors.grey.shade300,
-                width: 1.5,
-              ),
-            ),
-            child: RadioListTile<int>(
-              value: index,
-              groupValue: provider.selectedLinkIndex,
-              activeColor: Colors.blueAccent,
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-              title: Text(link.quality, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
-              onChanged: (int? val) {
-                provider.selectedLinkIndex = val!;
-                modalSetState(() {});
-              },
-            ),
-          );
-        }),
+        Text(
+          "Resolutions",
+          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: isDark ? Colors.white70 : Colors.grey[800])
+        ),
+        SizedBox(height: 1.5.h),
 
-        const Spacer(),
+        Expanded(
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            children: meta.videoLinks.asMap().entries.map((entry) {
+              final index = entry.key;
+              final link = entry.value;
+              if (!link.quality.toLowerCase().contains('hd') && !link.quality.toLowerCase().contains('sd')) {
+                return const SizedBox.shrink();
+              }
+              final isSelected = provider.selectedLinkIndex == index;
+              return Container(
+                margin: EdgeInsets.symmetric(vertical: 0.8.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: isSelected
+                      ? (isDark ? const Color(0xFF2563EB).withOpacity(0.15) : const Color(0xFFEFF6FF))
+                      : (isDark ? const Color(0xFF0F172A) : Colors.grey.shade50),
+                  border: Border.all(
+                    color: isSelected ? primaryColor : (isDark ? Colors.white10 : Colors.grey.shade200),
+                    width: 1.5,
+                  ),
+                ),
+                child: RadioListTile<int>(
+                  value: index,
+                  groupValue: provider.selectedLinkIndex,
+                  activeColor: primaryColor,
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  title: Text(
+                    link.quality.toUpperCase(),
+                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: isSelected ? primaryColor : textColor),
+                  ),
+                  onChanged: (int? val) {
+                    provider.selectedLinkIndex = val!;
+                    modalSetState(() {});
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
 
         // ONLY DOWNLOAD BUTTON — NO PROGRESS BAR HERE
         SizedBox(
           width: double.infinity,
+          height: 6.5.h,
           child: ElevatedButton.icon(
             onPressed: provider.isDownloading
-                ? null // Disable if already downloading
+                ? null
                 : () async {
                     Navigator.pop(sheetContext); // Close bottom sheet
                     _showDownloadProgressDialog(sheetContext); // Show full-screen progress
@@ -191,14 +261,14 @@ Widget _buildDownloadOptions({
                     );
                   },
             style: ElevatedButton.styleFrom(
-              backgroundColor: provider.isDownloading ? Colors.grey : Colors.blueAccent,
-              padding: EdgeInsets.symmetric(vertical: 1.8.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: provider.isDownloading ? Colors.grey : primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
             ),
             icon: const Icon(Icons.download_rounded, color: Colors.white),
             label: Text(
-              provider.isDownloading ? "Downloading..." : "Download",
-              style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
+              provider.isDownloading ? "Downloading..." : "Download Video",
+              style: TextStyle(color: Colors.white, fontSize: 13.5.sp, fontWeight: FontWeight.w700),
             ),
           ),
         ),
@@ -209,6 +279,7 @@ Widget _buildDownloadOptions({
 
 // ───────────────────────────────────────────── FULL SCREEN PROGRESS DIALOG
 void _showDownloadProgressDialog(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -224,31 +295,44 @@ void _showDownloadProgressDialog(BuildContext context) {
           }
 
           return AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(strokeWidth: 5, color: Colors.blueAccent),
-                SizedBox(height: 2.h),
-                Text("Downloading Video...", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
-                SizedBox(height: 2.h),
-                LinearProgressIndicator(
-                  value: provider.downloadProgress > 0 && provider.downloadProgress < 1
-                      ? provider.downloadProgress
-                      : null,
-                  minHeight: 8,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                ),
-                SizedBox(height: 1.h),
-                Text(
-                  provider.downloadProgress >= 1
-                      ? "Download Complete!"
-                      : "${(provider.downloadProgress * 100).toStringAsFixed(1)}%",
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-              ],
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            content: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(strokeWidth: 4, color: Color(0xFF2563EB)),
+                  SizedBox(height: 3.h),
+                  Text(
+                    "Downloading Video...",
+                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87)
+                  ),
+                  SizedBox(height: 2.5.h),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: provider.downloadProgress > 0 && provider.downloadProgress < 1
+                          ? provider.downloadProgress
+                          : null,
+                      minHeight: 10,
+                      backgroundColor: isDark ? Colors.white12 : Colors.grey[200],
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                    ),
+                  ),
+                  SizedBox(height: 1.5.h),
+                  Text(
+                    provider.downloadProgress >= 1
+                        ? "Download Complete!"
+                        : "${(provider.downloadProgress * 100).toStringAsFixed(1)}%",
+                    style: TextStyle(
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w700,
+                      color: provider.downloadProgress >= 1 ? Colors.green : (isDark ? Colors.white70 : Colors.black54)
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

@@ -13,143 +13,129 @@ class VideoListItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 1.0.h),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // thumbnail
-              Stack(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(videoDownloadedModel.thumbnail),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.black38.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        videoDownloadedModel.videoDuration,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium!.copyWith(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // title
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(left: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        videoDownloadedModel.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge!.copyWith(fontSize: 16.sp),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            videoDownloadedModel.videoQuality,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            videoDownloadedModel.videoFileSize,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            videoDownloadedModel.getFormattedDownloadedDate(),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                      // Row(
-                      //     mainAxisAlignment: MainAxisAlignment.center,
-                      //     children: [
-                      //       // play icon
-                      //       const SizedBox(width: 5),
-                      //       IconButton(
-                      //           onPressed: () {
-                      //             // Navigate to player screen
-                      //             // use an existing property from the model as the video path
-                      //             // final String videoPath =
-                      //             // videoDownloadedModel.videoPath;
-                      //             Navigator.push(
-                      //               context,
-                      //               MaterialPageRoute(
-                      //                 builder: (_) => VideoPlayerScreen(
-                      //                     video: videoDownloadedModel),
-                      //               ),
-                      //             );
-                      //           },
-                      //           icon: const Icon(Icons.play_circle_outlined,
-                      //               size: 28, color: Color(0xFF3B82F6))),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // play icon
-                          const SizedBox(width: 5),
-                          IconButton(
-                            onPressed: () async {
-                              final adProvider = Provider.of<AdProvider>(
-                                context,
-                                listen: false,
-                              );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final primaryColor = isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB);
 
-                              // Show interstitial ad before opening player
-                              if (adProvider.isInterstitialAvailable &&
-                                  adProvider.loadedInterstitialAd) {
-                                adProvider.showInterstitialAd(
-                                  onAdShowedFullScreen: (_) {},
-                                  onAdDismissedFullScreen: (_) {
-                                    // Navigate after ad is closed
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => VideoPlayerScreen(
-                                          video: videoDownloadedModel,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  onAdFailedToShowFullScreen: (_, error) {
-                                    // If ad fails, navigate directly
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => VideoPlayerScreen(
-                                          video: videoDownloadedModel,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              } else {
-                                // No ad available → direct navigation
+    return Container(
+      margin: EdgeInsets.only(bottom: 2.0.h),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail with custom roundings and shadow
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    videoDownloadedModel.thumbnail,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 90,
+                      height: 90,
+                      color: isDark ? const Color(0xFF0F172A) : Colors.grey[200],
+                      child: const Icon(Icons.broken_image, size: 30, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.75),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      videoDownloadedModel.videoDuration,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 14),
+
+            // Metadata / Title / Actions
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    videoDownloadedModel.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Metadata Badges (Quality, Size, Date)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildMetaBadge(context, videoDownloadedModel.videoQuality.toUpperCase()),
+                        const SizedBox(width: 6),
+                        _buildMetaBadge(context, videoDownloadedModel.videoFileSize),
+                        const SizedBox(width: 6),
+                        _buildMetaBadge(context, videoDownloadedModel.getFormattedDownloadedDate()),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Action Buttons Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Play button
+                      _buildActionButton(
+                        context,
+                        icon: Icons.play_arrow_rounded,
+                        color: primaryColor,
+                        onTap: () async {
+                          final adProvider = Provider.of<AdProvider>(
+                            context,
+                            listen: false,
+                          );
+
+                          if (adProvider.isInterstitialAvailable &&
+                              adProvider.loadedInterstitialAd) {
+                            adProvider.showInterstitialAd(
+                              onAdShowedFullScreen: (_) {},
+                              onAdDismissedFullScreen: (_) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -158,62 +144,107 @@ class VideoListItemWidget extends StatelessWidget {
                                     ),
                                   ),
                                 );
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.play_circle_outlined,
-                              size: 28,
-                              color: Color(0xFF3B82F6),
-                            ),
-                          ),
+                              },
+                              onAdFailedToShowFullScreen: (_, error) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => VideoPlayerScreen(
+                                      video: videoDownloadedModel,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => VideoPlayerScreen(
+                                  video: videoDownloadedModel,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
 
-                          // info icon
-                          // IconButton(
-                          //     onPressed: () {},
-                          //     icon: const Icon(Icons.info_outline_rounded,
-                          //         size: 28, color: Color(0xFF3B82F6))),
-                          // const SizedBox(width: 5),
-                          // share icon
-                          IconButton(
-                            onPressed: () async {
-                              final filePath = videoDownloadedModel.videoPath
-                                  .trim();
-                              final file = XFile(filePath);
-                              await Share.shareXFiles([
-                                file,
-                              ], text: 'Check out this video!');
-                            },
-                            icon: const Icon(
-                              Icons.share_outlined,
-                              size: 28,
-                              color: Color(0xFF3B82F6),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          // delete icon
-                          IconButton(
-                            onPressed: () {
-                              context
-                                  .read<DownloadedVideoListProvider>()
-                                  .deleteVideo(videoDownloadedModel, context);
-                            },
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 28,
-                              color: Color(0xFF3B82F6),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                        ],
+                      // Share button
+                      _buildActionButton(
+                        context,
+                        icon: Icons.share_rounded,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        onTap: () async {
+                          final filePath = videoDownloadedModel.videoPath.trim();
+                          final file = XFile(filePath);
+                          await Share.shareXFiles([
+                            file,
+                          ], text: 'Check out this video!');
+                        },
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Delete button
+                      _buildActionButton(
+                        context,
+                        icon: Icons.delete_outline_rounded,
+                        color: Colors.redAccent,
+                        onTap: () {
+                          context
+                              .read<DownloadedVideoListProvider>()
+                              .deleteVideo(videoDownloadedModel, context);
+                        },
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaBadge(BuildContext context, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white60 : Colors.black54,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const Divider(),
-        ],
+          child: Icon(icon, color: color, size: 22),
+        ),
       ),
     );
   }

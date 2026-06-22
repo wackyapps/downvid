@@ -146,27 +146,40 @@ class _HomeVideoFetchAndListScreenState
   }
 
   void _showLoadingDialog(BuildContext context, {String message = "Fetching video data.\nPlease wait..."}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withOpacity(0.4),
       builder: (_) => Center(
         child: Container(
-          width: 60.w,
-          padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
+          width: 70.w,
+          padding: EdgeInsets.symmetric(vertical: 3.5.h, horizontal: 4.w),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF3B82F6)),
-              SizedBox(height: 2.h),
+              const CircularProgressIndicator(strokeWidth: 4, color: Color(0xFF2563EB)),
+              SizedBox(height: 3.h),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.none,
+                ),
               ),
             ],
           ),
@@ -184,7 +197,7 @@ class _HomeVideoFetchAndListScreenState
     final url = _controller.text.trim();
 
     if (url.isEmpty) {
-      // Paste Link Action
+      // Paste Action
       final clipboardData = await Clipboard.getData('text/plain');
       if (clipboardData != null && clipboardData.text!.trim().isNotEmpty) {
         _controller.text = clipboardData.text!.trim();
@@ -221,29 +234,40 @@ class _HomeVideoFetchAndListScreenState
   @override
   Widget build(BuildContext context) {
     final bool hasUrl = _controller.text.trim().isNotEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB);
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // === Paste Field ===
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Icon(Icons.link_rounded, color: Colors.grey, size: 24),
+                  ),
+                  Expanded(
                     child: TextField(
                       controller: _controller,
                       onChanged: (value) {
@@ -252,73 +276,156 @@ class _HomeVideoFetchAndListScreenState
                         }
                         setState(() {}); // Trigger button update
                       },
-                      cursorColor: Colors.black,
-                      style: const TextStyle(fontSize: 15),
-                      decoration: const InputDecoration(
-                        hintText: 'Paste link to download',
-                        hintStyle: TextStyle(color: Colors.black45),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      cursorColor: primaryColor,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Paste link to download...',
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.white30 : Colors.black38,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
                         border: InputBorder.none,
                       ),
                     ),
                   ),
-                ),
-              ],
+                  if (hasUrl)
+                    IconButton(
+                      icon: const Icon(Icons.clear_rounded, color: Colors.grey),
+                      onPressed: () {
+                        _controller.clear();
+                        _homeAndDownloadProvider.url = "";
+                        setState(() {});
+                      },
+                    ),
+                ],
+              ),
             ),
-            SizedBox(height: 1.5.h),
+            SizedBox(height: 2.h),
 
             // === DYNAMIC SINGLE BUTTON ===
             SizedBox(
               width: double.infinity,
-              height: 6.h,
-              // width: 4.w,
+              height: 6.5.h,
               child: GestureDetector(
                 onTap: _onDynamicButtonPressed,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: hasUrl ? const Color(0xFF3B82F6) : const Color(0xFFE9E7FC),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: hasUrl
+                        ? LinearGradient(
+                            colors: isDark
+                                ? [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]
+                                : [const Color(0xFF2563EB), const Color(0xFF3B82F6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: hasUrl
+                        ? null
+                        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF)),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: hasUrl
+                        ? [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
                   ),
                   child: Text(
                     hasUrl ? 'Download' : 'Paste Link',
                     style: TextStyle(
-                      color: hasUrl ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w600,
+                      color: hasUrl ? Colors.white : primaryColor,
+                      fontWeight: FontWeight.w700,
                       fontSize: 16,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
             ),
 
-            SizedBox(height: 34.h),
+            SizedBox(height: 12.h),
 
-            // "How to Download" Section
-            const Divider(height: 12, endIndent: 50.0, indent: 50.0),
-            const Text(
-              "How to Download",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
+            // "How to Download" Container Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.03),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.help_outline_rounded,
+                          color: primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        "How to Download",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : Colors.black87,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
+                  const SizedBox(height: 12),
+
+                  _buildStep(context, 1, "Open Facebook and copy the link of the video of your choice."),
+                  _buildStep(context, 2, "Open DownVid. The link will be automatically pasted, or you can paste it manually."),
+                  _buildStep(context, 3, "Press Download and choose the quality you want."),
+                  _buildStep(context, 4, "You're done! The download will start automatically."),
+                ],
               ),
             ),
-            SizedBox(height: 1.h),
-
-            _buildStep(1, "Open Facebook and the link of a video of choice"),
-            _buildStep(2, "Open “DownVid” and Press Paste to Paste the link of the video"),
-            _buildStep(3, "Press Download and Choose the quality of the video you want to download"),
-            _buildStep(4, "Your Done! The download will start automatically."),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStep(int number, String text) {
+  Widget _buildStep(BuildContext context, int number, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -327,24 +434,26 @@ class _HomeVideoFetchAndListScreenState
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF3B82F6), width: 2),
             ),
             child: Text(
               number.toString(),
-              style: const TextStyle(
-                color: Color(0xFF3B82F6),
-                fontWeight: FontWeight.w600,
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: Colors.black87,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white70 : Colors.black87,
                 height: 1.4,
               ),
             ),
