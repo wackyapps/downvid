@@ -8,7 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdProvider extends ChangeNotifier {
   RewardedAd? _rewardedAd;
-  static const AdRequest request = AdRequest(nonPersonalizedAds: true);
+  static const AdRequest request = AdRequest();
   int _numRewardedLoadAttempts = 0;
   static int maxFailedLoadAttempts = 3;
 
@@ -50,16 +50,44 @@ class AdProvider extends ChangeNotifier {
 
   AdProvider() {
     debugPrint('AdProvider: Initializing...');
-    // _createInterstitialAd();
-    // _createRewardedAd();
+    _requestConsentAndInitialize();
+  }
 
-    // Pehla interstitial ad turant available banao
-    // Taaki app open karte hi ads dikh sake
-    Future.delayed(Duration.zero, () {
-      isInterstitialAvailable = true;
-      debugPrint(
-        'FIRST INTERSTITIAL AD FORCE AVAILABLE FOR TESTING/EARLY SHOW',
-      );
+  void _requestConsentAndInitialize() {
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      ConsentRequestParameters(),
+      () async {
+        if (await ConsentInformation.instance.isConsentFormAvailable()) {
+          _loadConsentForm();
+        } else {
+          _initializeAds();
+        }
+      },
+      (FormError error) => _initializeAds(),
+    );
+  }
+
+  void _loadConsentForm() {
+    ConsentForm.loadConsentForm(
+      (ConsentForm consentForm) async {
+        var status = await ConsentInformation.instance.getConsentStatus();
+        if (status == ConsentStatus.required) {
+          consentForm.show((FormError? formError) => _initializeAds());
+        } else {
+          _initializeAds();
+        }
+      },
+      (FormError formError) => _initializeAds(),
+    );
+  }
+
+  void _initializeAds() {
+    MobileAds.instance.initialize().then((status) {
+      debugPrint('📱 MobileAds initialized: ${status.adapterStatuses}');
+      Future.delayed(Duration.zero, () {
+        isInterstitialAvailable = true;
+        debugPrint('FIRST INTERSTITIAL AD FORCE AVAILABLE FOR TESTING/EARLY SHOW');
+      });
     });
   }
 

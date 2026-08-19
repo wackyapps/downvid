@@ -21,8 +21,6 @@ void main() async {
 
   await FileDownloader().configure();
 
-  MobileAds.instance.initialize();
-
   try {
     await setupServiceLocator();
     print('Service locator setup complete');
