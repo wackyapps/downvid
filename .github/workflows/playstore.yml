@@ -1,4 +1,4 @@
-name: Deploy to Play Store
+name: Build Android App Bundle
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  build_and_deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -41,11 +41,8 @@ jobs:
       - name: Build Android App Bundle
         run: flutter build appbundle --release
 
-      - name: Upload to Play Store
-        uses: r0adkll/upload-google-play@v1
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
         with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_CONFIG_JSON }}
-          packageName: com.fbreels.downloader
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: internal
-          status: completed
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
